@@ -1,0 +1,67 @@
+import json
+import os
+
+# ==============================================================================
+# Script Gerador de Dataset Sintético (JSONL) para watsonx.ai
+# Repositório: watsonx-rpg-java-expert
+# Objetivo: Treinamento / Fine-Tuning de Modelo (RPG Fully Free -> Java)
+# ==============================================================================
+
+dataset_pairs = [
+    # --------------------------------------------------------------------------
+    # MÓDULO: TRN001 - Operações Básicas e Validação de Transportadoras
+    # --------------------------------------------------------------------------
+    {
+        "instruction": "Atue como especialista IBM i e Java. Converta a rotina de validação de status de transportadora de RPGLE para uma camada de serviço em Java seguindo a Definition of Done (DoD).",
+        "input": "exec sql select CSTATS, CNOME into :wStatus, :wNome from CTRANSP where CTRANS = :pTransp;\nif wStatus = 'I';\n  res.sucesso = *off;\n  res.mensagemErro = 'Transportadora ' + %trim(wNome) + ' esta INATIVA.';\n  return res;\nendif;",
+        "output": "public record TransportadoraStatusDTO(Integer codigo, String nome, String status) {}\n\n@Service\npublic class TransportadoraService {\n    public void validarStatus(TransportadoraStatusDTO dto) {\n        if (\"I\".equalsIgnoreCase(dto.status())) {\n            throw new BusinessException(\"Transportadora \" + dto.nome() + \" esta INATIVA.\");\n        }\n    }\n}"
+    },
+    
+    # --------------------------------------------------------------------------
+    # MÓDULO: TRN002 - Gestão Transacional de Ordens de Transporte (FCARGAH/FCARGAD)
+    # --------------------------------------------------------------------------
+    {
+        "instruction": "Converta o procedimento de confirmação de Ordem de Transporte do TRN002 (com controle de transação MONITOR/COMMIT/ROLLBACK no DB2) para Java com Spring @Transactional.",
+        "input": "dcl-proc ConfirmarOrdemSQL;\n  dcl-pi *n ind;\n    pViagem packed(9:0) const;\n    pTransp packed(5:0) const;\n  end-pi;\n\n  monitor;\n    exec sql update FCARGAD set FDFLAG = 'S' where FDVIAT = :pViagem and FDCTRANS = :pTransp;\n    exec sql update FCARGAH set FHFLAG = 'S' where FHVIAT = :pViagem and FHCTRANS = :pTransp;\n    exec sql commit;\n    return *on;\n  on-error;\n    exec sql rollback;\n    return *off;\n  endmon;\nend-proc;",
+        "output": "@Service\npublic class TransporteOrderService {\n\n    @Autowired\n    private CargaHeaderRepository cargaHeaderRepository;\n    @Autowired\n    private CargaDetailRepository cargaDetailRepository;\n\n    @Transactional\n    public boolean confirmarOrdem(Long numeroViagem, Integer codigoTransportadora) {\n        try {\n            cargaDetailRepository.atualizarStatus(numeroViagem, codigoTransportadora, \"S\");\n            cargaHeaderRepository.atualizarStatus(numeroViagem, codigoTransportadora, \"S\");\n            return true;\n        } catch (DataAccessException e) {\n            // O Rollback e gerenciado automaticamente pelo Spring @Transactional\n            return false;\n        }\n    }\n}"
+    },
+    {
+        "instruction": "Converta a regra de validação de limite de seguro e escolta do TRN002 de RPGLE para Java.",
+        "input": "exec sql select CFLAGE, CVALMAX into :wExigeEscolta, :wValorMaximo from CTRANSP where CTRANS = :pTransp;\nif SQLCOD = 0 and wExigeEscolta = 'S';\n  exec sql select coalesce(sum(FDVNF), 0) into :wValorTotal from FCARGAD where FDVIAT = :pViagem;\n  if wValorTotal > wValorMaximo;\n    res.sucesso = *off;\n    res.mensagemErro = 'Valor total da carga excede o limite com escolta.';\n    return res;\n  endif;\nendif;",
+        "output": "public record ValidaEscoltaDTO(Long numeroViagem, Integer transportadoraId, BigDecimal valorTotalCarga) {}\n\n@Service\npublic class EscoltaValidationService {\n\n    public void validarLimiteEscolta(ValidaEscoltaDTO dto, BigDecimal limiteMaximo, boolean exigeEscolta) {\n        if (exigeEscolta && dto.valorTotalCarga().compareTo(limiteMaximo) > 0) {\n            throw new BusinessException(\"Valor total da carga excede o limite com escolta.\");\n        }\n    }\n}"
+    },
+
+    # --------------------------------------------------------------------------
+    # MÓDULO: TRN003 - Workflow e Solicitações de Manutenção (CSOLTRA)
+    # --------------------------------------------------------------------------
+    {
+        "instruction": "Converta a gravação de solicitação de alteração de transportadora do TRN003 (tabela CSOLTRA) para uma DTO imutável e repositório Spring Data JPA em Java.",
+        "input": "exec sql insert into CSOLTRA (CTRANSA, CNOMES, CTIPO, CFLAG, CUSERS, CDATAS, CTIMES)\nvalues (:pCodigo, :pNovoNome, 'A', 'N', current_user, current_date, current_time);",
+        "output": "public record SolicitacaoAlteracaoDTO(\n    Long codigoTransportadora,\n    String novoNome,\n    String tipoOperacao,\n    String statusFlag,\n    String usuario\n) {}\n\n@Repository\npublic interface SolicitacaoTransportadoraRepository extends JpaRepository<SolicitacaoEntity, Long> {}"
+    },
+
+    # --------------------------------------------------------------------------
+    # MÓDULO: CONCLI - Análise de Crédito e Status de Cliente
+    # --------------------------------------------------------------------------
+    {
+        "instruction": "Atue como especialista IBM i e Java. Converta a verificação de situação do cliente (SITCLI) e limite de crédito do programa CONCLI para Java.",
+        "input": "exec sql select SITCLI, LIMCRD into :wSitCli, :wLimCrd from CLIENTES where CODCLI = :pCodCli;\nif wSitCli = 'I';\n  pMensagem = 'Cliente bloqueado/inativo';\n  return *off;\nendif;\nif pValorPedido > wLimCrd;\n  pMensagem = 'Valor do pedido excede limite de credito';\n  return *off;\nendif;",
+        "output": "public record ClienteCreditoDTO(Long id, String situacao, BigDecimal limiteCredito) {}\n\n@Service\npublic class AnáliseCreditoService {\n\n    public void analisarCredito(ClienteCreditoDTO cliente, BigDecimal valorPedido) {\n        if (\"I\".equalsIgnoreCase(cliente.situacao())) {\n            throw new BusinessException(\"Cliente bloqueado/inativo\");\n        }\n        if (valorPedido.compareTo(cliente.limiteCredito()) > 0) {\n            throw new BusinessException(\"Valor do pedido excede limite de credito\");\n        }\n    }\n}"
+    }
+]
+
+def generate():
+    # Criar pasta 'datasets' se nao existir
+    os.makedirs("datasets", exist_ok=True)
+    
+    output_file = "datasets/dataset-rpg-java.jsonl"
+    
+    with open(output_file, "w", encoding="utf-8") as f:
+        for item in dataset_pairs:
+            f.write(json.dumps(item, ensure_ascii=False) + "\n")
+            
+    print(f"✅ Arquivo '{output_file}' gerado com sucesso!")
+    print(f"📊 Total de pares sinteticos exportados: {len(dataset_pairs)}")
+
+if __name__ == "__main__":
+    generate()
