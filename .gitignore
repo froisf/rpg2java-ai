@@ -10,3 +10,7 @@ lora_model_v2/
 *.safetensors
 datasets/processed/
 datasets/dataset-final.jsonl
+dataset-final-TRN.jsonl
+s6_pairs_TRN.jsonl
+mapa_CFC_TRN.json
+mapa_TRN.json
