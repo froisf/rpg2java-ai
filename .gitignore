@@ -22,3 +22,13 @@ datasets/processed/s6_pairs_TRN.jsonl
 datasets/processed/s6_pairs_TRN_CLEAN.jsonl
 datasets/raw-qrpglesrc/
 datasets/raw-qrpglesrc.zip
+datasets/
+.agents/
+**/QRPGLESRC/
+**/QCLSRC/
+**/QCMDSRC/
+**/QDDSSRC/
+*.rpgle
+*.clle
+*.cmd
+*.dds
