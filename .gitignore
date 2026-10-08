@@ -14,3 +14,11 @@ dataset-final-TRN.jsonl
 s6_pairs_TRN.jsonl
 mapa_CFC_TRN.json
 mapa_TRN.json
+# DATASET ANON TRN - NAO COMMITAR
+datasets/dataset-final-TRN.jsonl
+datasets/dataset-final-TRN-CLEAN.jsonl
+datasets/processed/mapa_CFC_TRN.json
+datasets/processed/s6_pairs_TRN.jsonl
+datasets/processed/s6_pairs_TRN_CLEAN.jsonl
+datasets/raw-qrpglesrc/
+datasets/raw-qrpglesrc.zip
