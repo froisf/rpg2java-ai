@@ -1,8 +1,8 @@
 # File-Level Architecture
 
 ## Repository Stats
-- **Total Files**: 1
-- **Total Lines of Code**: 67
+- **Total Files**: 2
+- **Total Lines of Code**: 87
 - **Average Complexity**: 2.00
 
 ## Dependency Graph

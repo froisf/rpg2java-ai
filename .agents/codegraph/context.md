@@ -1,12 +1,12 @@
 # Agent Context
 ## Snapshot
-- Total files analyzed: 1
-- Total LOC: 67
+- Total files analyzed: 2
+- Total LOC: 87
 - Average complexity: 2.00
 - Dependency edges: 0
 
 ## Languages
-- python: 1
+- python: 2
 
 ## Likely Entrypoints
 - Could not infer entrypoints from file names
