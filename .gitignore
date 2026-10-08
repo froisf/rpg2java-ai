@@ -8,3 +8,5 @@ datasets/dataset-final.jsonl
 lora_model_v2/
 *.bin
 *.safetensors
+datasets/processed/
+datasets/dataset-final.jsonl
