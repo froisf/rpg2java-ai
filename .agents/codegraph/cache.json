@@ -1,0 +1,50 @@
+{
+  "schema_version": "2",
+  "commit_hash": "0d0335c267053e8fe259aad047e0a5a0db127245",
+  "working_tree_fingerprint": "d8a8aca7a821f86b6c619ae25805df928936fe3d6da326643c3018526bd9a143",
+  "data": {
+    "nodes": [
+      {
+        "id": "scripts\\dataset.py",
+        "name": "dataset.py",
+        "path": "scripts\\dataset.py",
+        "loc": 67,
+        "complexity": 2.0,
+        "language": "python",
+        "imports": [
+          "os",
+          "json"
+        ],
+        "size": 31,
+        "symbols": {
+          "classes": [],
+          "functions": [
+            {
+              "name": "generate",
+              "docstring": "",
+              "args": []
+            }
+          ]
+        },
+        "function_details": [
+          {
+            "name": "generate",
+            "type": "function",
+            "complexity": 2
+          }
+        ]
+      }
+    ],
+    "edges": [],
+    "metrics": {
+      "total_files": 1,
+      "total_loc": 67,
+      "avg_complexity": 2.0,
+      "max_complexity": 2.0,
+      "languages": {
+        "python": 1
+      },
+      "most_connected": []
+    }
+  }
+}
